@@ -25,6 +25,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.cloud:spring-cloud-starter-stream-rabbit'
 	implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.8.6'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.8.6'
+	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.6'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
