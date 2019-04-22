@@ -104,7 +104,7 @@ public class WebController {
 		  obj.put("a", "new aaaaa");
 		  //System.err.println("a type :"+obj.get("a").getClass().getSimpleName());  //String
 		  //System.err.println("eureka type :"+obj.get("eureka").getClass().getSimpleName()); //LinkedHashMap
-		  
+		  //
 		  if(obj.get("eureka") instanceof LinkedHashMap<?, ?>) {
 			  System.err.println("yes");
 		  }
