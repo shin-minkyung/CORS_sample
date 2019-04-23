@@ -1,57 +1,40 @@
 package com.config;
 
 
-import static org.assertj.core.api.Assertions.in;
-import static org.hamcrest.CoreMatchers.instanceOf;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.omg.CORBA.OBJ_ADAPTER;
-import org.springframework.cloud.bus.event.AckRemoteApplicationEvent;
-import org.springframework.cloud.bus.event.RefreshListener;
-import org.springframework.cloud.bus.event.RefreshRemoteApplicationEvent;
-import org.springframework.cloud.bus.event.TraceListener;
-import org.springframework.cloud.context.refresh.ContextRefresher;
-import org.springframework.cloud.context.scope.refresh.RefreshScope;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.config.vo.JsonMessageVO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import com.google.gson.internal.LinkedHashTreeMap;
 
 @RestController
 public class WebController {
 
-	private RefreshScope scope;
-	private ConfigurableApplicationContext configCon;
-	private TraceListener traceListener;
-	
-	  
-	  @EventListener	
 	  @PostMapping("/refreshAll")
 	  public String refreshAll(HttpServletRequest servletRequest){		  
 		StringBuffer url = servletRequest.getRequestURL();
@@ -74,16 +57,30 @@ public class WebController {
 	  }
 	  
 	  
-	  @RequestMapping("/getConfig")	  
-	  public String getConfig(String username, String repo, String rootPath, LinkedHashMap<String, Object> Iterator) throws IOException{
+	  @PostMapping("/editConfig")	  
+	  public String getConfig(@RequestBody JsonMessageVO configReq) throws IOException{
+		  //information needed
+		  //username, reponame, rootPath(of Service), keyname(toEdit), newValue, token
+		  Map<String, Object> body = configReq.getBody();
+		  String username = (String) body.get("username");
+		  String repo = (String) body.get("repo");
+		  String rootPath = (String) body.get("rootPath");
+		  String token = (String) body.get("token");
+		  String keys = (String) body.get("key");
+		  Object newValue= configReq.getNewValue();
+		  System.err.println("newValue ::::"+newValue);
+		  System.err.println("newValue type:::: "+newValue.getClass().getSimpleName());
+		 		  
 		  //file name is not included in "rootPath"
 		  String url = "https://api.github.com/repos/"+username+"/"+repo+"/contents"+rootPath;
-		  
+		  		  
 		  //get JSON from Git API enpoint
 		  RestTemplate restTemplate = new RestTemplate();		  
    		//repository > directory	 
 		  ResponseEntity<ArrayList> response = restTemplate.getForEntity(url, ArrayList.class);
 
+		  
+		  
 		  //returns list of JSON with files' information in the directory
 		  //the 1st JSON. 
 		  LinkedHashMap<String, Object> json = (LinkedHashMap<String, Object>) response.getBody().get(0);
@@ -97,7 +94,12 @@ public class WebController {
 		  //returns JSON that contains information of the file(name, path, sha, content..)
 		  ResponseEntity<LinkedHashMap> fileJson = restTemplate.getForEntity(file_url, LinkedHashMap.class);
 		  System.err.println("file json "+fileJson);
-		  //decoing the content
+		  
+		    
+		  
+		  
+		  
+		  //decoding the content
 		  byte[] decodedContent = Base64.decodeBase64((String) fileJson.getBody().get("content"));
 		  //converting decoded content into String
 		  String ymlString = new String(decodedContent);
@@ -109,13 +111,14 @@ public class WebController {
 		  //LinkedHashMap obj is generated from yaml
 		  System.err.println(" Obj from Yaml "+obj);
 		  
+		  
+		  
+		  
+		  
 		  /*parameter example case
 		   * Changing the value of the key "~.defaultZone" with newValue
 		   */
-		 // String keys = "eureka.client.serviceUrl.defaultZone";
-		  String keys= "eureka.client.strangekey.defaultZone.bitchkey";
-		  String newValue = "this is for test";
-		  
+	
 		 //Convert keys into ArrayList
 		  String[] keyList = keys.split("\\.");
 		  LinkedHashMap<String, Object> map = obj;
@@ -127,7 +130,7 @@ public class WebController {
 				  if(!(map.get(keyList[i]) instanceof LinkedHashMap<?, ?>)) {
 					  //the value of the key is String or null
 					  //System.err.println("Type of map.get(keyList[i])"+map.get(keyList[i]));
-					  if(map.get(keyList[i]) instanceof String) {
+					  if(map.get(keyList[i]) instanceof Object) {
 						  map.put(keyList[i], newValue);
 						  break;
 					  }else if(map.get(keyList[i])==null) {						  
@@ -178,22 +181,43 @@ public class WebController {
 		  
 		  //conversion result
 		  System.err.println("result obj"+obj);
-		  System.err.println("result map"+map);
+		//  System.err.println("result map"+map);
 		  
-		  Yaml newYaml = new Yaml();
-		  ObjectMapper mapper = new ObjectMapper();
-		  String objJSON = mapper.writeValueAsString(obj);
-		  JsonNode jsonNodeTree = new ObjectMapper().readTree(objJSON);
-		  String newYmlString = new YAMLMapper().writeValueAsString(jsonNodeTree);
+		  //map -> json -> yml
+		//  Yaml newYaml = new Yaml();
+		//  ObjectMapper mapper = new ObjectMapper();		 
+		//   mapper.writeValue(w, value);
+		//String objJSON = mapper.writeValueAsString(obj).replaceAll("\"", "");
+		 // System.err.println("objByte:::::"+new String(objString));		  
+	//	  JsonNode jsonNodeTree = new ObjectMapper().;
+		  //System.err.println("JsonNode.textValue()::::"+j);
+		  //System.err.println("JsonNode :::::"+jsonNodeTree);
+//		  Iterator<Entry<String, JsonNode>> nodes = jsonNodeTree.fields();
+//		  while(nodes.hasNext()) {
+//			  //Map.Entry<String, JsonNode> entry = jsonNodeTree.fields().next();
+//			  System.err.println(nodes.next().getKey()+" : "+nodes.next().getValue());
+//		  }
+		  		  
+		  //String newYmlString = new YAMLMapper().writeValueAsString(jsonNodeTree);
 		  
+		  DumperOptions options = new DumperOptions();
+		  options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+		  options.setPrettyFlow(true);
+		  options.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN);
+		  Yaml newyml = new Yaml(options);
+		  String output = newyml.dump(obj);
+		  
+		  System.err.println("NEW YAML :::"+output);
+		  
+		  //String newYmlString = new YAMLMapper().
 		  //String newYmlString =  newYaml.dumpAll((java.util.Iterator<? extends Object>) obj);
-		  String encodedString = Base64.encodeBase64String(newYmlString.getBytes());
-		  System.err.println("newYmlString "+newYmlString);
-		  System.err.println("encodedString "+encodedString);
+		//  String encodedString = Base64.encodeBase64String(newYmlString.getBytes());
+		//  System.err.println("newYmlString "+newYmlString);
+		 // System.err.println("encodedString "+encodedString);
   
 	  HttpHeaders headers = new HttpHeaders();
 	  headers.setContentType(MediaType.APPLICATION_JSON);
-	  headers.set("Authorization", "token 146683bafa4f32ddd7eb56940526e5c84624d7c4");
+	  headers.set("Authorization", "token "+token);
 	  
 	  
 //	  JSONObject putJson = new JSONObject();
@@ -202,16 +226,15 @@ public class WebController {
 	  String sha = (String) fileJson.getBody().get("sha");
 //	  putJson.put("sha", sha );
 	  
-	  String param = "{\"message\":\"this is a message\",";
-	  param += "\"content\":\""+encodedString+"\", ";
-	  param += "\"sha\": \""+sha+"\"}";
-	  
-	  System.err.println("param "+param);
+//	  String param = "{\"message\":\"this is a message\",";
+//	  param += "\"content\":\""+encodedString+"\", ";
+//	  param += "\"sha\": \""+sha+"\"}";
+//	  
+//	  System.err.println("param "+param);
 	
 		 // HttpEntity<String> request = new HttpEntity<>(param, headers);		 
-		 // ResponseEntity<String> final_response= restTemplate.exchange(file_url, HttpMethod.PUT, request, String.class);
-		  
-		  return newYmlString;
+		 // ResponseEntity<String> final_response= restTemplate.exchange(file_url, HttpMethod.PUT, request, String.class);		  
+		  return output;
 	  }
 	  
 	  
