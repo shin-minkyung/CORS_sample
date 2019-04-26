@@ -12,7 +12,10 @@
  - key: 설정파일(yml)에서 추가하거나 수정할 키(property)의 이름
  - newValue : key의 값에 해당하는 값. String이 아니면 더블쿼트를 입력하지 않는것이 중요합니다
  
+ 수정전의 yml파일 내용입니다.
+ 
  ![원래 설정파일](./image/config2.png)
  
+ test.testsub가 있으면 수정하고 없으면 추가하라는 POST 요청을 한 결과를 리턴합니다. 
  
  ![요청대로 변경된 설정파일 수정결과](./image/config1.png)
