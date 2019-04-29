@@ -77,9 +77,7 @@ public class WebController {
 		  //get JSON from Git API enpoint
 		  RestTemplate restTemplate = new RestTemplate();		  
    		//repository > directory	 
-		  ResponseEntity<ArrayList> response = restTemplate.getForEntity(url, ArrayList.class);
-
-		  
+		  ResponseEntity<ArrayList> response = restTemplate.getForEntity(url, ArrayList.class);		  
 		  
 		  //returns list of JSON with files' information in the directory
 		  //the 1st JSON. 
