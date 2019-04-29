@@ -1,7 +1,7 @@
 # API for Spring Cloud Config Server
 컨피그 서버에 바꿀 설정키와 값을 요청하면 레파지토리의 설정파일이 수정되는 API입니다
 
-# 사용법
+# 1. configServerDomain/editConfig
 ![설정파일 수정요청](./image/config3.png)
 
 수정요청사항을 Json형식으로 요청합니다. 
@@ -19,3 +19,6 @@
  test.testsub가 있으면 수정하고 없으면 추가하라는 POST 요청을 한 결과를 리턴합니다. 
  
  ![요청대로 변경된 설정파일 수정결과](./image/config1.png)
+ 
+ # 2. configServerDomain/refreshAll
+ 
