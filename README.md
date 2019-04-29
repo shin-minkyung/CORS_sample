@@ -28,6 +28,6 @@
  # 2. configServerDomain/refreshAll
  config server와 연결된 repository에서 수정이 발생할때마다 저장소 전체를 새로고침하는 API입니다. <br>
  수정할때마다 <code>http://configServerDomain/monitor</code> 에 path=*를 POST하도록 합니다. <br>
- Git 저장소 Webhook 주소로 ''' http://configServerDomain/refreshAll '''추가하면됩니다. <br>
+ Git 저장소 Webhook 주소로 <code>http://configServerDomain/refreshAll</code>추가하면됩니다. <br>
  Webhook에서 configServerDomain은 외부에서 접속가능한 ip여야합니다. <br>
  refreshAll을 사용하면 설정 수정이 발생해도 무중단 수정이 가능해집니다. <br>
