@@ -1,7 +1,12 @@
 # API for Spring Cloud Config Server
-컨피그 서버에 바꿀 설정키와 값을 요청하면 레파지토리의 설정파일이 수정되는 API입니다
+
 
 # 1. configServerDomain/editConfig
+컨피그 서버에 바꿀 설정키와 값을 요청하면 레파지토리의 설정파일이 수정되는 API입니다.
+해당 엔드포인트로 JSON형식으로 요구정보를 보내면 config server repository의 yml파일이 수정됩니다.
+저장소정보와 수정/추가할 key, value만 보내면 yml에 수정/추가 됩니다.
+
+
 ![설정파일 수정요청](./image/config3.png)
 
 수정요청사항을 Json형식으로 요청합니다. 
@@ -21,4 +26,8 @@
  ![요청대로 변경된 설정파일 수정결과](./image/config1.png)
  
  # 2. configServerDomain/refreshAll
- 
+ config server와 연결된 repository에서 수정이 발생할때마다 저장소 전체를 새로고침하는 API입니다.
+ 수정할때마다 http://configServerDomain/monitor 에 path=*를 POST하도록 합니다.
+ Git 저장소 Webhook 주소로 http://configServerDomain/refreshAll 추가하면됩니다.
+ Webhook에서 configServerDomain은 외부에서 접속가능한 ip여야합니다.
+ refreshAll을 사용하면 설정 수정이 발생해도 무중단 수정이 가능해집니다.
