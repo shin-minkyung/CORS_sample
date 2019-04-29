@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -26,6 +27,8 @@ import org.springframework.web.client.RestTemplate;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+import com.config.service.ConfigServerService;
+import com.config.vo.EditConfigVO;
 import com.config.vo.JsonMessageVO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +37,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 @RestController
 public class WebController {
+	
+	@Autowired
+	private ConfigServerService configServerService;
 
 	  @PostMapping("/refreshAll")
 	  public String refreshAll(HttpServletRequest servletRequest){		  
@@ -59,26 +65,17 @@ public class WebController {
 	  
 	  @PostMapping("/editConfig")	  
 	  public String getConfig(@RequestBody JsonMessageVO configReq) throws IOException{
-		  //information needed
-		  //username, reponame, rootPath(of Service), keyname(toEdit), newValue, token
-		  Map<String, Object> body = configReq.getBody();
-		  String username = (String) body.get("username");
-		  String repo = (String) body.get("repo");
-		  String rootPath = (String) body.get("rootPath");
-		  String token = (String) body.get("token");
+		 		  	  
+		  Map<String, Object> body = configReq.getBody();	
+		
+		  ResponseEntity<ArrayList> response = (ResponseEntity<ArrayList>) configServerService.fetchGitApiJson(body);
+		  
 		  String keys = (String) body.get("key");
 		  Object newValue= configReq.getNewValue();
 		  System.err.println("newValue ::::"+newValue);
 		  System.err.println("newValue type:::: "+newValue.getClass().getSimpleName());
-		 		  
-		  //file name is not included in "rootPath"
-		  String url = "https://api.github.com/repos/"+username+"/"+repo+"/contents"+rootPath;
-		  		  
-		  //get JSON from Git API enpoint
-		  RestTemplate restTemplate = new RestTemplate();		  
-   		//repository > directory	 
-		  ResponseEntity<ArrayList> response = restTemplate.getForEntity(url, ArrayList.class);		  
 		  
+		 	  
 		  //returns list of JSON with files' information in the directory
 		  //the 1st JSON. 
 		  LinkedHashMap<String, Object> json = (LinkedHashMap<String, Object>) response.getBody().get(0);
@@ -86,16 +83,17 @@ public class WebController {
 		  Object name = json.get("name");
 		  System.err.println("name "+name);
 		  
+		  String url = configServerService.generateGitApiPath(body);
 		  String file_url = url+"/"+name;
 		  System.err.println("file url "+file_url);
 		  
+		  RestTemplate restTemplate = new RestTemplate();
 		  //returns JSON that contains information of the file(name, path, sha, content..)
 		  ResponseEntity<LinkedHashMap> fileJson = restTemplate.getForEntity(file_url, LinkedHashMap.class);
 		  System.err.println("file json "+fileJson);
 		  
 		    
-		  
-		  
+		   
 		  
 		  //decoding the content
 		  byte[] decodedContent = Base64.decodeBase64((String) fileJson.getBody().get("content"));
