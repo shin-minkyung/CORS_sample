@@ -59,6 +59,11 @@ public class EditConfigVO {
 	}
 	public void setCommitMsg(String commitMsg) {
 		this.commitMsg = commitMsg;
+	}
+	@Override
+	public String toString() {
+		return "EditConfigVO [username=" + username + ", repo=" + repo + ", rootPath=" + rootPath + ", token=" + token
+				+ ", key=" + key + ", newValue=" + newValue + ", sha=" + sha + ", commitMsg=" + commitMsg + "]";
 	}	
 	
 	
