@@ -67,90 +67,52 @@ public class WebController {
 	  public String getConfig(@RequestBody JsonMessageVO configReq) throws IOException{
 		 		  	  
 		  Map<String, Object> body = configReq.getBody();	
-		
+		  EditConfigVO editConfigVO = configServerService.getEditConfigVO(body);
+		  
 		  ResponseEntity<ArrayList> response = (ResponseEntity<ArrayList>) configServerService.fetchGitApiJson(body);
 		  
 		  String keys = (String) body.get("key");
 		  Object newValue= configReq.getNewValue();
-		  System.err.println("newValue ::::"+newValue);
-		  System.err.println("newValue type:::: "+newValue.getClass().getSimpleName());
-		  
-		 	  
+		  String token = (String) body.get("token");
+	
 		  //returns list of JSON with files' information in the directory
 		  //the 1st JSON. 
 		  LinkedHashMap<String, Object> json = (LinkedHashMap<String, Object>) response.getBody().get(0);
 		  //"name":"serviceA.yml"
 		  Object name = json.get("name");
-		  System.err.println("name "+name);
+		 // System.err.println("name "+name);
 		  
 		  String url = configServerService.generateGitApiPath(body);
 		  String file_url = url+"/"+name;
-		  System.err.println("file url "+file_url);
+		 // System.err.println("file url "+file_url);
 		  
 		  RestTemplate restTemplate = new RestTemplate();
 		  //returns JSON that contains information of the file(name, path, sha, content..)
 		  ResponseEntity<LinkedHashMap> fileJson = restTemplate.getForEntity(file_url, LinkedHashMap.class);
 		  System.err.println("file json "+fileJson);
 		  
-		    
-		   
+		  		   
 		  
 		  //decoding the content
 		  byte[] decodedContent = Base64.decodeBase64((String) fileJson.getBody().get("content"));
 		  //converting decoded content into String
-		  String ymlString = new String(decodedContent);
+		  String ymlString = new String(decodedContent);		  
+		  
 		  System.err.println("content : "+new String(decodedContent));
-		  //converting decoded String into LinkedHashMap
-		  Yaml yaml = new Yaml();
-		  LinkedHashMap<String, Object> obj = yaml.load(ymlString);
+		  
+		  //converting decoded String into LinkedHashMap		 		 
+		  LinkedHashMap<String, Object> obj = configServerService.ymlStringToMap(ymlString);
 		  
 		  //LinkedHashMap obj is generated from yaml
 		  System.err.println(" Obj from Yaml "+obj);
 		  
 		  
 		  
-		  
-		  
 		  /*parameter example case
 		   * Changing the value of the key "~.defaultZone" with newValue
 		   */
-	
-		 //Convert keys into ArrayList
-		  String[] keyList = keys.split("\\.");
-		  LinkedHashMap<String, Object> map = obj;
-		  LinkedHashMap<String, Object> insertMap = new LinkedHashMap<>();
-
-		  System.err.println("keyList "+keyList.toString());
-		  for(int i=0; i<keyList.length; i++) {		
-			  //System.err.println("keyList[i] "+keyList[i]);
-				  if(!(map.get(keyList[i]) instanceof LinkedHashMap<?, ?>)) {
-					  //the value of the key is String or null
-					  //System.err.println("Type of map.get(keyList[i])"+map.get(keyList[i]));
-					  if(map.get(keyList[i]) instanceof Object) {
-						  map.put(keyList[i], newValue);
-						  break;
-					  }else if(map.get(keyList[i])==null) {						  
-						  for(int j=keyList.length-1; j>i; j--) {
-							  System.err.println("insertMap "+insertMap);
-							  if(insertMap.isEmpty()==true) {
-								  insertMap.put(keyList[j], newValue);
-								 // System.err.println("insertMap "+insertMap);
-							  }else {
-								  LinkedHashMap<String, Object> frameMap = new LinkedHashMap<>();
-								  frameMap.put(keyList[j], insertMap);
-								  insertMap = frameMap;	
-								 // System.err.println("insertMap "+insertMap);
-							  }													 						  
-						  }//for
-						  map.put(keyList[i], insertMap);
-						  break;
-					  }									  
-				  }else {
-					  //the value of the key is LinkedHashMap Object
-					  map = (LinkedHashMap<String, Object>) map.get(keyList[i]);
-					  System.err.println("map "+map);
-				  }		  
-		  }
+	       configServerService.mergeNewValue(keys, newValue, obj);
+		 
 		  
 //		  //depth 1 Structure
 //		  obj.put("a", "new aaaaa");
@@ -195,14 +157,9 @@ public class WebController {
 //		  }
 		  		  
 		  //String newYmlString = new YAMLMapper().writeValueAsString(jsonNodeTree);
+
 		  
-		  DumperOptions options = new DumperOptions();
-		  options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-		  options.setPrettyFlow(true);
-		  options.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN);
-		  Yaml newyml = new Yaml(options);
-		  String output = newyml.dump(obj);
-		  
+		  String output= configServerService.mapToYmlString(obj);		  
 		  System.err.println("NEW YAML :::"+output);
 		  
 		  //String newYmlString = new YAMLMapper().
@@ -210,26 +167,8 @@ public class WebController {
 		//  String encodedString = Base64.encodeBase64String(newYmlString.getBytes());
 		//  System.err.println("newYmlString "+newYmlString);
 		 // System.err.println("encodedString "+encodedString);
-  
-	  HttpHeaders headers = new HttpHeaders();
-	  headers.setContentType(MediaType.APPLICATION_JSON);
-	  headers.set("Authorization", "token "+token);
-	  
-	  
-//	  JSONObject putJson = new JSONObject();
-//	  putJson.put("message","ffff" );
-//	  putJson.put("content", encodedString );		  
-	  String sha = (String) fileJson.getBody().get("sha");
-//	  putJson.put("sha", sha );
-	  
-//	  String param = "{\"message\":\"this is a message\",";
-//	  param += "\"content\":\""+encodedString+"\", ";
-//	  param += "\"sha\": \""+sha+"\"}";
-//	  
-//	  System.err.println("param "+param);
-	
-		 // HttpEntity<String> request = new HttpEntity<>(param, headers);		 
-		 // ResponseEntity<String> final_response= restTemplate.exchange(file_url, HttpMethod.PUT, request, String.class);		  
+		  		  
+		  configServerService.updateGitRepoContent(file_url, editConfigVO, output);		  
 		  return output;
 	  }
 	  

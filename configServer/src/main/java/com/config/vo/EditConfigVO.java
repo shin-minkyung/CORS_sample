@@ -7,8 +7,10 @@ public class EditConfigVO {
 	private String rootPath;
 	private String token;
 	private String key;
-	private String newVale;
+	private Object newValue;
 	private String sha;
+	private String commitMsg;
+	
 	public String getUsername() {
 		return username;
 	}
@@ -38,12 +40,13 @@ public class EditConfigVO {
 	}
 	public void setKey(String key) {
 		this.key = key;
+	}	
+	
+	public Object getNewValue() {
+		return newValue;
 	}
-	public String getNewVale() {
-		return newVale;
-	}
-	public void setNewVale(String newVale) {
-		this.newVale = newVale;
+	public void setNewValue(Object newValue) {
+		this.newValue = newValue;
 	}
 	public String getSha() {
 		return sha;
@@ -51,6 +54,12 @@ public class EditConfigVO {
 	public void setSha(String sha) {
 		this.sha = sha;
 	}
+	public String getCommitMsg() {
+		return commitMsg;
+	}
+	public void setCommitMsg(String commitMsg) {
+		this.commitMsg = commitMsg;
+	}	
 	
 	
 }
