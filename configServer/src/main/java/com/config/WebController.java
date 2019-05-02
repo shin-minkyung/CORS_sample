@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -85,39 +86,12 @@ public class WebController {
 			  
 			  //LinkedHashMap obj is generated from yaml
 			  System.err.println(" Obj from Yaml "+obj);
-			  		  
-			  /*parameter example case
-			   * Changing the value of the key "~.defaultZone" with newValue
-			   */
-		       configServerService.mergeNewValue(editConfigVO, obj);
-			 
-			  
-//			  //depth 1 Structure
-//			  obj.put("a", "new aaaaa");
-//			  //System.err.println("a type :"+obj.get("a").getClass().getSimpleName());  //String
-//			  //System.err.println("eureka type :"+obj.get("eureka").getClass().getSimpleName()); //LinkedHashMap
-//			  //
-//			  if(obj.get("eureka") instanceof LinkedHashMap<?, ?>) {
-//				  System.err.println("yes");
-//			  }
-//			  //depth 2
-//			  LinkedHashMap<String, String> obj2 = (LinkedHashMap<String, String>) obj.get("my");
-//			  obj2.put("greeting", "new greeting");
-	//
-//			  //depth 3 Structure
-//			  LinkedHashMap<String, LinkedHashMap<String, Object>> obj3= (LinkedHashMap<String, LinkedHashMap<String, Object>>) obj.get("eureka");		  
-//			  obj3.get("client").put("fetchRegistry", false);
-//			  
-			  //depth4
-			  //LinkedHashMap<String, Object> obj4 = obj3.get("client");
-			  //obj4.get("serviceUrl").
-			  //put("defaultZone", "http://localhost:8787/eureka/");
-			  
-			  
-			  
+		
+		       configServerService.mergeNewValue(editConfigVO, obj);			 
+		  
 			  //conversion result
 			  System.err.println("result obj"+obj);
-			//  System.err.println("result map"+map);
+			 
 			  
 			  //map -> json -> yml
 			//  Yaml newYaml = new Yaml();
@@ -135,7 +109,6 @@ public class WebController {
 //			  }
 			  		  
 			  //String newYmlString = new YAMLMapper().writeValueAsString(jsonNodeTree);
-
 			  
 			  String output= configServerService.mapToYmlString(obj);		  
 			  System.err.println("NEW YAML :::"+output);
