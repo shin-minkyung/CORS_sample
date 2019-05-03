@@ -18,9 +18,9 @@ var createCORSRequest = function(method, url) {
   return xhr;
 };
 
-// 127.0.0.2 -> your domain
-// 9999 -> your port number
-var url = 'http://127.0.0.2:9999/actuator/httptrace';
+// localhost -> your domain
+// 7777 -> your port number
+var url = 'http://localhost:7777/actuator/httptrace';
 var method = 'GET';
 var xhr = createCORSRequest(method, url);
 
