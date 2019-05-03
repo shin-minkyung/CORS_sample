@@ -1,34 +1,0 @@
-server:
-  port: 9102
-  
-
-spring:  application:    name: eurekaServer
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, httptrace
-      cors:
-        allowed-origins: '*'
-        allowed-methods: '*'
-        allowed-headers: Content-Type, Origin              
-  server:
-    port: 9999
-    address: 127.0.0.2
- 
-eureka:
-  instance:
-    hostname: localhost      client:    registerWithEureka: false
-    fetchRegistry: false
-    serviceUrl:      defaultZone:  http://${eureka.instance.hostname}:${server.port}/eureka/
-  server:
-    enable-self-preservation: true 
-    waitTimeInMsWhenSyncEmpty: 0  
-    
-
-    
-
-
-    
-     
